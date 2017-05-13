@@ -1,7 +1,10 @@
-from enum import Enum, IntEnum
-from datetime import datetime, timezone
 from nyaa import app, db
 from nyaa.torrents import create_magnet
+
+import re
+from datetime import datetime
+
+from enum import Enum, IntEnum
 from sqlalchemy import func, ForeignKeyConstraint, Index
 from sqlalchemy_utils import ChoiceType, EmailType, PasswordType
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -39,6 +42,7 @@ class TorrentFlags(IntEnum):
 
 DB_TABLE_PREFIX = app.config['TABLE_PREFIX']
 
+
 class Torrent(db.Model):
     __tablename__ = DB_TABLE_PREFIX + 'torrents'
 
@@ -65,6 +69,21 @@ class Torrent(db.Model):
     sub_category_id = db.Column(db.Integer, nullable=False)
     redirect = db.Column(db.Integer, db.ForeignKey(
         DB_TABLE_PREFIX + 'torrents.id'), nullable=True)
+
+    processed_display_name = db.Column(
+        db.String(length=255, collation=COL_UTF8_GENERAL_CI), nullable=False, index=True)
+
+    @db.validates('display_name')
+    def update_processed_display_name(self, key, value):
+        to_space = '_[]()'
+        processed_value = value.lower()
+        for c in to_space:
+            processed_value = processed_value.replace(c, ' ')
+        # processed_value = re.sub(r'(480|720|1080)p', lambda m: m.group(0) + " " + m.group(1), processed_value)
+        processed_value = re.sub(r' +', ' ', processed_value)
+        # print(processed_value)
+        self.processed_display_name = processed_value
+        return value
 
     __table_args__ = (
         Index('uploader_flag_idx', 'uploader_id', 'flags'),
@@ -156,7 +175,7 @@ class Torrent(db.Model):
 
 
 class TorrentNameSearch(FullText, Torrent):
-    __fulltext_columns__ = ('display_name',)
+    __fulltext_columns__ = ('processed_display_name',)
 
 
 class TorrentFilelist(db.Model):

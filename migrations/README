@@ -1,0 +1,4 @@
+Generic single-database configuration.
+
+Use manage.py in project root:
+  python flask_manage.py db migrate/upgrade/downgrade

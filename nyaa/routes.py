@@ -158,10 +158,30 @@ def search(term='', user=None, sort='id', order='desc', category='0_0', quality_
             int(models.TorrentFlags.HIDDEN | models.TorrentFlags.DELETED)).is_(False))
 
     if term:
-        for item in shlex.split(term, posix=False):
-            if len(item) >= 2:
-                query = query.filter(FullTextSearch(
-                    item, models.TorrentNameSearch, FullTextMode.NATURAL))
+        # term_words = []
+        # try:
+        #     term_words = shlex.split(term, posix=True)
+        # except:
+        #     flask.flash(flask.Markup('<strong>Invalid search terms!</strong> Please check your query.'), 'warning')
+        #     pass 
+        
+        # boolean_query = []
+        # for term_word in term_words:
+        #     m = re.match(r'^(-)?(\*)?(.+?)(\*)?$', term_word)
+        #     if m:
+        #         word = m.group(3)
+        #         if len(word) > 2:
+        #             word = word
+        #             wildcarding = m.group(2) or m.group(4)
+        #             if " " in word:
+        #                 word = '"' + word.replace('"', '\\"') + '"'
+        #             term_parts = [ not wildcarding and (m.group(1) or '+'), m.group(2), word, m.group(4)]
+        #             boolean_query.append(''.join(filter(None, term_parts)) )
+        # boolean_query = " ".join(boolean_query)
+        # print("FTS:", boolean_query)
+        boolean_query = term
+        query = query.filter(FullTextSearch(boolean_query, models.TorrentNameSearch, FullTextMode.BOOLEAN))
+
 
     # Sort and order
     if sort.class_ != models.Torrent:
