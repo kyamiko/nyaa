@@ -512,6 +512,9 @@ def view_torrent(torrent_id):
     comments = models.Comment.query.filter_by(torrent=torrent_id)
     comment_count = comments.count()
 
+    comments = models.Comment.query.filter_by(torrent=torrent_id)
+    comment_count = comments.count()
+
     return flask.render_template('view.html', torrent=torrent,
                                  files=files,
                                  form=form,
